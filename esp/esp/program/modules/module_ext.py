@@ -118,6 +118,12 @@ class StudentClassRegModuleInfo(models.Model):
     #   Choose whether users have to fill out "required" modules before they can see the main StudentReg page
     #   (They still have to fill them out before confirming their registration, regardless of this setting)
     force_show_required_modules = models.BooleanField(default=True, help_text = "Check this box to require that users see and fill out \"required\" modules before they can see the main StudentReg page")
+
+    #   Visible registration types
+    visible_registration_types = models.ManyToManyField(
+        'program.RegistrationType', null=True, related_name='+',
+        help_text="RegistrationTypes that will be visible to students on the "
+                  "student registration pages.")
     
     def reg_verbs(self):
         verb_list = [self.signup_verb]
