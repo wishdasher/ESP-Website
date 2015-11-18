@@ -943,7 +943,9 @@ function populate_classes()
             new_sec.capacity = parent_class.class_size_max_optimal;
         if ((new_sec.max_class_capacity) && (new_sec.max_class_capacity < new_sec.capacity))
             new_sec.capacity = new_sec.max_class_capacity;
-        new_sec.timeslots = new_sec.event_ids.split(",");
+        new_sec.timeslots = [];
+        if (new_sec.event_ids !== null)
+            new_sec.timeslots = new_sec.event_ids.split(",");
         for (var j in new_sec.timeslots)
         {
             if (data.timeslots[parseInt(new_sec.timeslots[j])])
