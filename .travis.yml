@@ -8,7 +8,10 @@ env:
     - DJANGO_SETTINGS_MODULE=esp.settings
   matrix:
     - TRAVIS_JOB="lint"
+    - TRAVIS_JOB="lint_future"
     - TRAVIS_JOB="test"
+# Uncomment this line to have Travis test your changes with the branch 'future-django-support' merged in
+#    - TRAVIS_JOB="test_future"
 before_install:
   - deploy/travis/before_install
 install:

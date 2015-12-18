@@ -1,12 +1,14 @@
 #!/bin/bash
 set -euf -o pipefail
 
-if [ "$TRAVIS_JOB" = "test" ]; then
+if [ "$TRAVIS_JOB" = "test_main" ] || [ "$TRAVIS_JOB" = "test_future" ]; then
     cd esp
     ./manage.py collectstatic --noinput -v 0
     ./manage.py test
 elif [ "$TRAVIS_JOB" = "lint" ]; then
     deploy/lint
+elif [ "$TRAVIS_JOB" = "lint_future" ]; then
+    deploy/lint_future
 else
     echo "Unknown TRAVIS_JOB: $TRAVIS_JOB"
     exit 1

@@ -1,0 +1,54 @@
+#!/bin/bash -e
+
+function check_py () {
+# This is a bit janky. If you know how to get the output
+# to go on separate lines, please tell me.
+    results=$(git --no-pager grep $1|grep "\.py"|grep -v "future-ok")
+    echo $results
+    if [[ results ]]; then
+	EXIT=1
+    fi
+}
+
+EXIT=0
+
+# http://stackoverflow.com/a/4774063
+pushd "$(dirname "$0")" > /dev/null
+SCRIPTDIR="$(pwd -P)"
+popd > /dev/null
+
+BASEDIR="$(dirname "$SCRIPTDIR")"
+cd $BASEDIR
+
+echo "Running future Django lint checks..."
+
+# Uncomment checks here once you've deleted all the uses from the codebase,
+# or checked that we never used the feature in the first place,
+# or checked that future changes won't break your use of this feature.
+# Add more checks once a new version of Django is released,
+# and delete them once we've upgraded main to a new version and
+# cleared out old pull requests.
+# Only push to future-django-support if what you're doing won't work
+# on our current Django version. Otherwise, make a pull request to
+# main and add the check as part of your pull request.
+
+# A lot of these are impossible to write without some false positives.
+# Many of them should be considered warnings rather than errors: check
+# that a future behavior change won't break your code.
+# Add "#future-ok" to the end of a line if you've checked.
+
+# Django 1.9 backwards incompatibility checks
+# TODO: finish this list
+#check_py is_usable
+#check_py "\.add("
+check_py get_request_repr
+check_py add_to_builtins
+
+# Django 1.9 deprecation checks
+# (if we had logging for deprecation warnings, we wouldn't need these)
+# TODO: write this list
+
+# Django 1.10 deprecation checks
+# TODO: write this list
+
+exit $EXIT
