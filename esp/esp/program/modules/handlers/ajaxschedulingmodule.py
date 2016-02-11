@@ -308,7 +308,7 @@ class AJAXSchedulingModule(ProgramModuleObj):
     def ajax_schedule_deletereg(self, prog, cls, user=None):
         cls.clearRooms()
         cls.clear_meeting_times()
-        self.get_change_log(prog).append([], "", int(cls.id), user)
+        self.get_change_log(prog).appendScheduling([], "", int(cls.id), user)
 
         return self.makeret(prog, ret=True, msg="Schedule removed for Class Section '%s'" % cls.emailcode())
 
@@ -343,14 +343,14 @@ class AJAXSchedulingModule(ProgramModuleObj):
                 return self.makeret(prog, ret=False, msg=cannot_schedule)
 
             cls.assign_meeting_times(times)
-            status, errors = cls.assign_room(classroom)
+            status, errors = cls.assign_room(classroom, clear_others=True)
 
             if not status: # If we failed any of the scheduling-constraints checks in assign_room()
                 cls.clear_meeting_times()
                 return self.makeret(prog, ret=False, msg=" | ".join(errors))
 
             #add things to the change log here
-            self.get_change_log(prog).append([int(t.id) for t in times], classroom_names[0], int(cls.id), user)
+            self.get_change_log(prog).appendScheduling([int(t.id) for t in times], classroom_names[0], int(cls.id), user)
 
             return self.makeret(prog, ret=True, msg="Class Section '%s' successfully scheduled" % cls.emailcode())
 
@@ -364,7 +364,7 @@ class AJAXSchedulingModule(ProgramModuleObj):
         #check whether we have a log entry at least as old as the last fetched time
         #if not, we return a command to reload instead of the log
         #note: negative number implies we want to debug dump changelog
-        if cl.get_earliest_index() is not None and cl.get_earliest_index() > last_fetched_index:
+        if cl.get_earliest_index() is not None and last_fetched_index !=0 and cl.get_earliest_index() > last_fetched_index:
             return { "other" : [ { 'command' : "reload", 'earliest_index' : cl.get_earliest_index(), 'latest_index' : cl.get_latest_index(), 'time' : time.time() } ] }
 
         return { "changelog" : cl.get_log(last_fetched_index), 'other' : [ { 'time': time.time() } ] }
@@ -390,6 +390,15 @@ class AJAXSchedulingModule(ProgramModuleObj):
             change_log = change_log[0]
 
         return change_log
+
+    @aux_call
+    @needs_admin
+    @json_response()
+    def ajax_section_details(self, request, tl, one, two, module, extra, prog):
+        sectionDetails = {}
+        for sectionDetail in module_ext.AJAXSectionDetail.objects.filter(program=prog):
+            sectionDetails[sectionDetail.cls_id] = [{'comment': sectionDetail.comment, 'locked': sectionDetail.locked}]
+        return sectionDetails
 
     @aux_call
     @needs_admin
@@ -421,6 +430,26 @@ class AJAXSchedulingModule(ProgramModuleObj):
             return self.makeret(prog, ret=False, msg="Unrecognized command: '%s'" % action)
 
         return retval
+
+    @aux_call
+    @needs_admin
+    def ajax_set_comment(self, request, tl, one, two, module, extra, prog):
+        if not request.POST.has_key('comment'):
+            raise ESPError("This URL is intended to be used for client<->server communication; it's not for human-readable content.", log=False)
+
+        # Pull relevant data out of the JSON structure
+        cls_id = request.POST['cls']
+        comment = request.POST['comment']
+        locked = request.POST.has_key('locked')
+
+        try:
+            module_ext.AJAXSectionDetail.objects.get(cls_id=cls_id).update(comment, locked)
+        except module_ext.AJAXSectionDetail.DoesNotExist:
+            sectionDetail = module_ext.AJAXSectionDetail()
+            sectionDetail.initialize(prog, cls_id, comment, locked)
+
+        self.get_change_log(prog).appendComment(comment, locked, cls_id, request.user)
+        return self.makeret(prog, ret=True, msg="Class Section #%s successfully updated" % cls_id)
 
     @aux_call
     @needs_admin

@@ -47,6 +47,7 @@ from esp.web.models import NavBarCategory
 from esp.tagdict.models import Tag
 
 from django.contrib.auth.models import Group
+from django.test import LiveServerTestCase
 from django.test.client import Client
 from django import forms
 
@@ -548,6 +549,11 @@ class ProgramFrameworkTest(TestCase):
     """
 
     def setUp(self, *args, **kwargs):
+        # We manually cache the creation of resource types
+        # since the cache persists between tests, and the underlying database objects do not
+        # we clear it here
+        ResourceType._get_or_create_cache = {}
+
         user_role_setup()
 
         #   Default parameters
