@@ -264,8 +264,6 @@ class ThemeController(object):
             return
         if (customization_name is None) or (customization_name == "None"):
             customization_name = self.get_current_customization()
-        if customization_name == "None":
-            return
         if theme_name is None:
             theme_name = self.get_current_theme()
         backup_info = self.clear_theme(keep_files=keep_files)
